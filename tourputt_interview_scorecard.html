@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>투어펏 기획자 면접 질문지 및 자동 채점표</title>
+<style>
+  :root{
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --line:#d9deea;
+    --text:#1f2937;
+    --muted:#6b7280;
+    --accent:#2563eb;
+    --accent-2:#eff6ff;
+    --good:#16a34a;
+    --warn:#d97706;
+    --bad:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+    color:var(--text); background:var(--bg);
+  }
+  .wrap{max-width:1600px; margin:0 auto; padding:20px;}
+  h1{margin:0 0 8px; font-size:28px;}
+  .sub{color:var(--muted); margin-bottom:16px; line-height:1.5;}
+  .topbar{
+    position:sticky; top:0; z-index:20; background:rgba(246,247,251,.96); backdrop-filter: blur(8px);
+    padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--line);
+  }
+  .toolbar{
+    display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+    background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px;
+  }
+  .toolbar label{font-size:14px; color:var(--muted);}
+  select, button{
+    border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--text);
+    padding:10px 12px; font-size:14px;
+  }
+  button{cursor:pointer}
+  button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .summary{
+    display:grid; grid-template-columns:repeat(6,minmax(140px,1fr)); gap:12px; margin-top:12px;
+  }
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px;
+  }
+  .card h3{margin:0 0 6px; font-size:14px; color:var(--muted); font-weight:600;}
+  .score{font-size:26px; font-weight:800;}
+  .small{font-size:12px; color:var(--muted);}
+  .status.good{color:var(--good)}
+  .status.warn{color:var(--warn)}
+  .status.bad{color:var(--bad)}
+  table{
+    width:100%; border-collapse:separate; border-spacing:0; background:var(--card);
+    border:1px solid var(--line); border-radius:18px; overflow:hidden;
+  }
+  thead th{
+    position:sticky; top:174px; z-index:10; background:#f9fbff;
+    border-bottom:1px solid var(--line); font-size:13px; color:#334155; padding:12px 10px; text-align:left;
+  }
+  tbody td{
+    border-bottom:1px solid #edf1f7; padding:12px 10px; vertical-align:top; font-size:14px; line-height:1.45;
+  }
+  tbody tr:last-child td{border-bottom:none}
+  .col-id{width:72px}
+  .col-type{width:72px}
+  .col-target{width:92px}
+  .col-area{width:110px}
+  .col-max{width:70px}
+  .col-score{width:110px}
+  .col-memo{width:220px}
+  .question{font-weight:600;}
+  .criterion{color:var(--muted); font-size:13px; margin-top:4px;}
+  input[type="number"]{
+    width:84px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; font-size:14px;
+  }
+  textarea{
+    width:100%; min-height:72px; resize:vertical; padding:8px 10px; border:1px solid var(--line); border-radius:10px; font-size:13px;
+  }
+  .pill{
+    display:inline-block; padding:4px 8px; border-radius:999px; background:var(--accent-2); color:var(--accent); font-size:12px; font-weight:700;
+  }
+  .hidden{display:none}
+  .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
+  .legend span{font-size:12px; color:var(--muted)}
+  .footer-note{margin-top:12px; color:var(--muted); font-size:13px;}
+  @media (max-width: 1100px){
+    .summary{grid-template-columns:repeat(2,minmax(140px,1fr))}
+    thead th{top:244px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1>투어펏 기획자 면접 질문지 / 자동 채점표</h1>
+    <div class="sub">후보를 선택하면 해당 후보의 공통 질문과 개인 질문이 함께 표시됩니다. 점수를 입력하면 총점과 상태가 자동 계산됩니다. 브라우저의 로컬 저장소를 사용하므로 같은 기기/브라우저에서는 입력값이 유지됩니다.</div>
+    <div class="toolbar">
+      <div>
+        <label for="candidateSelect">후보 선택</label><br />
+        <select id="candidateSelect">
+          <option value="김재덕">김재덕</option>
+          <option value="김승현">김승현</option>
+          <option value="고인호">고인호</option>
+          <option value="이중한">이중한</option>
+        </select>
+      </div>
+      <div>
+        <label for="sectionFilter">질문 범위</label><br />
+        <select id="sectionFilter">
+          <option value="all">공통 + 개인 전체</option>
+          <option value="common">공통만</option>
+          <option value="personal">개인만</option>
+        </select>
+      </div>
+      <div>
+        <label>&nbsp;</label><br />
+        <button id="resetCurrent">현재 후보 점수 초기화</button>
+      </div>
+      <div>
+        <label>&nbsp;</label><br />
+        <button id="resetAll">전체 후보 점수 초기화</button>
+      </div>
+      <div>
+        <label>&nbsp;</label><br />
+        <button class="primary" onclick="window.print()">인쇄 / PDF 저장</button>
+      </div>
+    </div>
+
+    <div class="summary">
+      <div class="card">
+        <h3>후보</h3>
+        <div class="score" id="sumCandidate">김재덕</div>
+      </div>
+      <div class="card">
+        <h3>공통 점수</h3>
+        <div class="score"><span id="sumCommon">0</span> <span class="small">/ 70</span></div>
+      </div>
+      <div class="card">
+        <h3>개인 점수</h3>
+        <div class="score"><span id="sumPersonal">0</span> <span class="small">/ 100</span></div>
+      </div>
+      <div class="card">
+        <h3>표시 중 질문 기준 총점</h3>
+        <div class="score"><span id="sumVisible">0</span> <span class="small" id="sumVisibleMax">/ 170</span></div>
+      </div>
+      <div class="card">
+        <h3>전체 총점</h3>
+        <div class="score"><span id="sumAll">0</span> <span class="small">/ 170</span></div>
+      </div>
+      <div class="card">
+        <h3>판정</h3>
+        <div class="score status" id="sumStatus">보류</div>
+        <div class="small">85 이상 즉시 채용 / 75~84 조건부 / 65~74 보류 / 64 이하 탈락</div>
+      </div>
+    </div>
+    <div class="legend">
+      <span>공통 7문항 × 10점 = 70점</span>
+      <span>개인 10문항 × 10점 = 100점</span>
+      <span>전체 총점 = 170점</span>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="col-type">구분</th>
+        <th class="col-target">대상</th>
+        <th class="col-id">질문ID</th>
+        <th>질문 / 평가기준</th>
+        <th class="col-area">평가영역</th>
+        <th class="col-max">배점</th>
+        <th class="col-score">점수</th>
+        <th class="col-memo">메모</th>
+      </tr>
+    </thead>
+    <tbody id="questionBody"></tbody>
+  </table>
+
+  <div class="footer-note">권장 사용법: 공통 7문항 평가 후 개인 질문 10문항을 이어서 진행하세요. 점수는 후보별로 별도 저장됩니다.</div>
+</div>
+
+<script>
+const questions = [
+  {section:'공통', target:'전체', id:'Q1', text:'투어펏이 해결하려는 문제를 어떻게 정의하시겠습니까?', area:'제품사고', criterion:'사용자 개선 관점 정의', max:10},
+  {section:'공통', target:'전체', id:'Q2', text:'퍼팅 분석 기능의 입력부터 결과까지 전체 구조를 설명해주세요', area:'시스템이해', criterion:'영상→데이터→이벤트→결과 흐름', max:10},
+  {section:'공통', target:'전체', id:'Q3', text:'퍼팅 데이터를 사용자에게 어떻게 보여줘야 가장 이해하기 쉬울까요?', area:'UX설계', criterion:'시각화/비교/피드백 구조', max:10},
+  {section:'공통', target:'전체', id:'Q4', text:'투어펏 모바일 MVP를 만든다면 어떤 기능부터 구현하시겠습니까?', area:'제품설계', criterion:'MVP 범위 정의', max:10},
+  {section:'공통', target:'전체', id:'Q5', text:'촬영 환경 문제가 있을 때 어떻게 해결하시겠습니까?', area:'현실대응', criterion:'UX 가이드 및 오류 처리', max:10},
+  {section:'공통', target:'전체', id:'Q6', text:'혼자 기획부터 출시까지 한다면 어떤 순서로 진행하시겠습니까?', area:'실행력', criterion:'문제→MVP→검증', max:10},
+  {section:'공통', target:'전체', id:'Q7', text:'투어펏 기획을 맡으면 첫 2주 동안 무엇을 하시겠습니까?', area:'킬러질문', criterion:'실행 계획 구체성', max:10},
+
+  {section:'개인', target:'김재덕', id:'Q8', text:'AI/ML 기반 서비스에서 가장 중요한 요소는 무엇이며 어떻게 제품화하시겠습니까?', area:'제품사고', criterion:'기술→사용자 가치 전환', max:10},
+  {section:'개인', target:'김재덕', id:'Q9', text:'복잡한 AI 구조를 UX로 단순화한 경험을 설명해주세요', area:'UX설계', criterion:'시스템→UX 변환 능력', max:10},
+  {section:'개인', target:'김재덕', id:'Q10', text:'영상 기반 분석 서비스 구조를 기획자 관점에서 설명해주세요', area:'시스템이해', criterion:'구조 이해 명확성', max:10},
+  {section:'개인', target:'김재덕', id:'Q11', text:'퍼팅 데이터를 어떤 지표로 정의하고 UI로 어떻게 표현하시겠습니까?', area:'UX설계', criterion:'지표+시각화 설계', max:10},
+  {section:'개인', target:'김재덕', id:'Q12', text:'AI 서비스 MVP 범위를 어디까지 제한하시겠습니까?', area:'제품전략', criterion:'과설계 방지', max:10},
+  {section:'개인', target:'김재덕', id:'Q13', text:'B2B vs B2C 중 어떤 전략이 적합하다고 보십니까?', area:'사업이해', criterion:'시장 판단', max:10},
+  {section:'개인', target:'김재덕', id:'Q14', text:'AI 정확도가 낮을 때 UX로 어떻게 보완하시겠습니까?', area:'현실대응', criterion:'불확실성 UX 설계', max:10},
+  {section:'개인', target:'김재덕', id:'Q15', text:'혼자 기획 조직에서 방향성을 유지하는 방법은 무엇입니까?', area:'리드역량', criterion:'의사결정 구조', max:10},
+  {section:'개인', target:'김재덕', id:'Q16', text:'초기 제품 방향을 잘못 잡았을 때 어떻게 수정하시겠습니까?', area:'제품전략', criterion:'방향 수정 능력', max:10},
+  {section:'개인', target:'김재덕', id:'Q17', text:'기획자가 기술 이해를 어디까지 가져가야 한다고 보십니까?', area:'기술이해', criterion:'역할 경계 정의', max:10},
+
+  {section:'개인', target:'김승현', id:'Q18', text:'데이터 분석으로 문제를 정의하고 성과로 연결한 경험을 설명해주세요', area:'데이터활용', criterion:'데이터→성과 연결', max:10},
+  {section:'개인', target:'김승현', id:'Q19', text:'퍼널 분석 결과를 실제 UX 문제로 어떻게 검증하시겠습니까?', area:'데이터활용', criterion:'정량+정성 검증', max:10},
+  {section:'개인', target:'김승현', id:'Q20', text:'영상 기반 분석 시스템 구조를 어떻게 정의하시겠습니까?', area:'시스템이해', criterion:'구조 이해', max:10},
+  {section:'개인', target:'김승현', id:'Q21', text:'퍼팅 데이터를 기반으로 행동을 변화시키는 UX는 어떻게 설계하시겠습니까?', area:'UX설계', criterion:'행동 유도 설계', max:10},
+  {section:'개인', target:'김승현', id:'Q22', text:'AI 자동화 범위를 어디까지 설정하시겠습니까?', area:'제품전략', criterion:'자동화 판단', max:10},
+  {section:'개인', target:'김승현', id:'Q23', text:'2주 내 MVP를 만든다면 어떻게 실행하시겠습니까?', area:'실행력', criterion:'실행 계획', max:10},
+  {section:'개인', target:'김승현', id:'Q24', text:'0→1 제품 기획 시 접근 방식은 어떻게 다르게 가져가시겠습니까?', area:'제품설계', criterion:'신규 제품 사고', max:10},
+  {section:'개인', target:'김승현', id:'Q25', text:'AI 서비스에서 기획자가 이해해야 할 기술 요소는 무엇입니까?', area:'기술이해', criterion:'구조 이해', max:10},
+  {section:'개인', target:'김승현', id:'Q26', text:'데이터와 직관이 충돌할 때 어떻게 판단하시겠습니까?', area:'제품사고', criterion:'균형 판단', max:10},
+  {section:'개인', target:'김승현', id:'Q27', text:'혼자 기획 시 부족한 점과 보완 방법은 무엇입니까?', area:'자기인식', criterion:'현실 인식', max:10},
+
+  {section:'개인', target:'고인호', id:'Q28', text:'퍼팅 분석에서 핵심 기능을 무엇으로 정의하시겠습니까?', area:'제품사고', criterion:'사용자 가치 중심', max:10},
+  {section:'개인', target:'고인호', id:'Q29', text:'좌표 데이터를 어떤 지표로 만들고 UX로 표현하시겠습니까?', area:'UX설계', criterion:'데이터→UX', max:10},
+  {section:'개인', target:'고인호', id:'Q30', text:'사용자 관점에서 결과 화면을 어떻게 설계하시겠습니까?', area:'UX설계', criterion:'사용자 중심 설계', max:10},
+  {section:'개인', target:'고인호', id:'Q31', text:'기술 vs 제품 우선순위는 어떻게 판단하시겠습니까?', area:'제품전략', criterion:'우선순위 판단', max:10},
+  {section:'개인', target:'고인호', id:'Q32', text:'기능이 많아질 때 구조를 어떻게 정리하시겠습니까?', area:'시스템이해', criterion:'구조화 능력', max:10},
+  {section:'개인', target:'고인호', id:'Q33', text:'기획자와 개발자의 역할 경계는 무엇입니까?', area:'협업이해', criterion:'역할 정의', max:10},
+  {section:'개인', target:'고인호', id:'Q34', text:'좋은 UX란 무엇이라고 생각하십니까?', area:'제품사고', criterion:'UX 정의', max:10},
+  {section:'개인', target:'고인호', id:'Q35', text:'기술 구현이 어려울 때 어떻게 대응하시겠습니까?', area:'현실대응', criterion:'문제 해결', max:10},
+  {section:'개인', target:'고인호', id:'Q36', text:'시스템 설계 시 가장 중요한 요소는 무엇입니까?', area:'시스템이해', criterion:'핵심 요소 정의', max:10},
+  {section:'개인', target:'고인호', id:'Q37', text:'MVP 범위를 어떻게 설정하시겠습니까?', area:'제품전략', criterion:'MVP 정의', max:10},
+
+  {section:'개인', target:'이중한', id:'Q38', text:'혼자 서비스 개발 시 가장 어려운 의사결정은 무엇이었습니까?', area:'실행력', criterion:'문제 해결 경험', max:10},
+  {section:'개인', target:'이중한', id:'Q39', text:'개인 프로젝트와 상용 서비스 차이는 무엇입니까?', area:'제품이해', criterion:'서비스 이해', max:10},
+  {section:'개인', target:'이중한', id:'Q40', text:'데이터 기반 UX 설계를 어떻게 하시겠습니까?', area:'UX설계', criterion:'데이터→UX', max:10},
+  {section:'개인', target:'이중한', id:'Q41', text:'팀 개발 시 가장 달라져야 할 점은 무엇입니까?', area:'협업이해', criterion:'조직 적응', max:10},
+  {section:'개인', target:'이중한', id:'Q42', text:'기능 완성도 vs 속도 중 무엇을 선택하시겠습니까?', area:'제품전략', criterion:'우선순위 판단', max:10},
+  {section:'개인', target:'이중한', id:'Q43', text:'투어펏에서 가장 먼저 검증할 가설은 무엇입니까?', area:'제품사고', criterion:'핵심 문제 정의', max:10},
+  {section:'개인', target:'이중한', id:'Q44', text:'서비스 개선을 위한 데이터 활용 방법은 무엇입니까?', area:'데이터활용', criterion:'데이터 활용', max:10},
+  {section:'개인', target:'이중한', id:'Q45', text:'MVP를 정의할 때 기준은 무엇입니까?', area:'제품전략', criterion:'MVP 기준', max:10},
+  {section:'개인', target:'이중한', id:'Q46', text:'혼자 일할 때와 팀에서 일할 때 차이는 무엇입니까?', area:'협업이해', criterion:'조직 이해', max:10},
+  {section:'개인', target:'이중한', id:'Q47', text:'현재 본인의 부족한 점과 개선 계획은 무엇입니까?', area:'자기인식', criterion:'성장 전략', max:10},
+];
+
+const candidateSelect = document.getElementById('candidateSelect');
+const sectionFilter = document.getElementById('sectionFilter');
+const bodyEl = document.getElementById('questionBody');
+
+function scoreKey(candidate, qid){ return `tourputt_score_${candidate}_${qid}`; }
+function memoKey(candidate, qid){ return `tourputt_memo_${candidate}_${qid}`; }
+
+function getQuestionsForView(candidate, sectionMode){
+  return questions.filter(q => {
+    const matchTarget = q.target === '전체' || q.target === candidate;
+    const matchSection = sectionMode === 'all' ? true : (sectionMode === 'common' ? q.section === '공통' : q.section === '개인');
+    return matchTarget && matchSection;
+  });
+}
+
+function getAllForCandidate(candidate){
+  return questions.filter(q => q.target === '전체' || q.target === candidate);
+}
+
+function render(){
+  const candidate = candidateSelect.value;
+  const mode = sectionFilter.value;
+  const rows = getQuestionsForView(candidate, mode);
+  bodyEl.innerHTML = rows.map(q => {
+    const savedScore = localStorage.getItem(scoreKey(candidate, q.id)) ?? '';
+    const savedMemo = localStorage.getItem(memoKey(candidate, q.id)) ?? '';
+    return `
+      <tr data-section="${q.section}" data-target="${q.target}">
+        <td><span class="pill">${q.section}</span></td>
+        <td>${q.target}</td>
+        <td>${q.id}</td>
+        <td>
+          <div class="question">${q.text}</div>
+          <div class="criterion">평가기준: ${q.criterion}</div>
+        </td>
+        <td>${q.area}</td>
+        <td>${q.max}</td>
+        <td><input type="number" min="0" max="${q.max}" step="1" value="${savedScore}" data-qid="${q.id}" class="score-input"></td>
+        <td><textarea data-qid="${q.id}" class="memo-input" placeholder="면접 메모 입력">${savedMemo}</textarea></td>
+      </tr>`;
+  }).join('');
+
+  document.querySelectorAll('.score-input').forEach(el => {
+    el.addEventListener('input', e => {
+      const qid = e.target.dataset.qid;
+      let v = e.target.value;
+      if (v !== '') {
+        let n = Number(v);
+        const q = questions.find(x => x.id === qid);
+        if (Number.isNaN(n)) n = '';
+        else n = Math.min(q.max, Math.max(0, n));
+        e.target.value = n;
+        localStorage.setItem(scoreKey(candidate, qid), String(n));
+      } else {
+        localStorage.removeItem(scoreKey(candidate, qid));
+      }
+      updateSummary();
+    });
+  });
+
+  document.querySelectorAll('.memo-input').forEach(el => {
+    el.addEventListener('input', e => {
+      const qid = e.target.dataset.qid;
+      localStorage.setItem(memoKey(candidate, qid), e.target.value);
+    });
+  });
+
+  updateSummary();
+}
+
+function sumScores(candidate, filterFn){
+  return questions
+    .filter(q => (q.target === '전체' || q.target === candidate) && (!filterFn || filterFn(q)))
+    .reduce((acc, q) => acc + Number(localStorage.getItem(scoreKey(candidate, q.id)) || 0), 0);
+}
+
+function maxScores(candidate, filterFn){
+  return questions
+    .filter(q => (q.target === '전체' || q.target === candidate) && (!filterFn || filterFn(q)))
+    .reduce((acc, q) => acc + q.max, 0);
+}
+
+function statusFor(score){
+  if (score >= 85) return {text:'즉시 채용', cls:'good'};
+  if (score >= 75) return {text:'조건부 합격', cls:'warn'};
+  if (score >= 65) return {text:'보류', cls:'warn'};
+  return {text:'탈락', cls:'bad'};
+}
+
+function updateSummary(){
+  const candidate = candidateSelect.value;
+  const mode = sectionFilter.value;
+  const common = sumScores(candidate, q => q.section === '공통');
+  const personal = sumScores(candidate, q => q.section === '개인');
+  const all = common + personal;
+
+  const visibleQs = getQuestionsForView(candidate, mode);
+  const visibleMax = visibleQs.reduce((a,q) => a + q.max, 0);
+  const visibleSum = visibleQs.reduce((a,q) => a + Number(localStorage.getItem(scoreKey(candidate, q.id)) || 0), 0);
+
+  document.getElementById('sumCandidate').textContent = candidate;
+  document.getElementById('sumCommon').textContent = common;
+  document.getElementById('sumPersonal').textContent = personal;
+  document.getElementById('sumAll').textContent = all;
+  document.getElementById('sumVisible').textContent = visibleSum;
+  document.getElementById('sumVisibleMax').textContent = `/ ${visibleMax}`;
+
+  const st = statusFor(all);
+  const statusEl = document.getElementById('sumStatus');
+  statusEl.textContent = st.text;
+  statusEl.className = `score status ${st.cls}`;
+}
+
+candidateSelect.addEventListener('change', render);
+sectionFilter.addEventListener('change', render);
+
+document.getElementById('resetCurrent').addEventListener('click', () => {
+  const candidate = candidateSelect.value;
+  if (!confirm(`${candidate} 후보의 점수와 메모를 모두 초기화할까요?`)) return;
+  questions.filter(q => q.target === '전체' || q.target === candidate).forEach(q => {
+    localStorage.removeItem(scoreKey(candidate, q.id));
+    localStorage.removeItem(memoKey(candidate, q.id));
+  });
+  render();
+});
+
+document.getElementById('resetAll').addEventListener('click', () => {
+  if (!confirm('전체 후보의 점수와 메모를 모두 초기화할까요?')) return;
+  ['김재덕','김승현','고인호','이중한'].forEach(candidate => {
+    questions.filter(q => q.target === '전체' || q.target === candidate).forEach(q => {
+      localStorage.removeItem(scoreKey(candidate, q.id));
+      localStorage.removeItem(memoKey(candidate, q.id));
+    });
+  });
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
